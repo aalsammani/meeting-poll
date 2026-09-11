@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply bg-paper-tint text-ink antialiased;
+    font-feature-settings: "kern", "liga", "tnum";
+  }
+  body {
+    @apply min-h-screen font-sans text-[17px] leading-relaxed;
+  }
+  h1, h2, h3 {
+    @apply font-semibold tracking-tight text-ink;
+    text-wrap: balance;
+  }
+  p {
+    max-width: 68ch;
+  }
+  /* One consistent, clearly visible focus ring everywhere. */
+  :focus-visible {
+    outline: 2px solid #1C2333;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .input {
+    @apply w-full rounded border border-paper-line bg-paper px-3 py-2 text-ink placeholder:text-ink-mute;
+    @apply focus:border-ink focus:outline-none focus:ring-2 focus:ring-ink/15;
+  }
+  .input[aria-invalid="true"] {
+    @apply border-alert;
+  }
+}

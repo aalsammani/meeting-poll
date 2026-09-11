@@ -1,0 +1,7 @@
+# Only the settings this project needs. The Supabase CLI fills in defaults.
+project_id = "overlap"
+
+[functions.submit-response]
+# Participants have no account, so the function must accept requests that
+# carry only the public anon key. Authorization is enforced inside the function.
+verify_jwt = false
