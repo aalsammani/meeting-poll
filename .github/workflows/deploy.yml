@@ -1,0 +1,62 @@
+# Builds the static frontend and publishes it to GitHub Pages.
+#
+# Required repository configuration (Settings → Secrets and variables → Actions):
+#   Variables: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, VITE_BASE_PATH (optional)
+# These are public values (the anon key is protected by Row Level Security),
+# so they are stored as Variables, not Secrets.
+#
+# Settings → Pages → Source must be set to "GitHub Actions".
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Build
+        env:
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
+          VITE_BASE_PATH: ${{ vars.VITE_BASE_PATH }}
+        run: npm run build
+      - name: Add SPA fallback and custom domain
+        run: |
+          # GitHub Pages serves 404.html for unknown paths; using the app shell
+          # lets client-side routes like /p/<id> load directly.
+          cp dist/index.html dist/404.html
+          # Keeps a custom domain configured across deploys (no-op if unset).
+          if [ -n "${{ vars.CUSTOM_DOMAIN }}" ]; then echo "${{ vars.CUSTOM_DOMAIN }}" > dist/CNAME; fi
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
